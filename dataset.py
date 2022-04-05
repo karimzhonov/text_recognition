@@ -1,33 +1,10 @@
-import os
-import io
-import cv2.cv2 as cv2
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
-from PIL import Image
 from keras.datasets import mnist
 
 
-def load_cyrillic(path = 'src/dataset/Cyrillic'):
-    """Load Cirillic dataset"""
-    print(f'[+] Init dataset: {path}')
-    x_train, y_train = [], []
-    for i in tqdm(os.listdir(path)):
-        for j in os.listdir(os.path.join(path, i)):
-            image_path = os.path.join(path, i, j)
-            with open(image_path, 'rb') as file:
-                byte = io.BytesIO(file.read())
-                image = Image.open(byte)
-                image = np.array(image, dtype=np.uint8)
-                image = cv2.cvtColor(image, cv2.COLOR_BGRA2GRAY)
-                image = cv2.resize(image, (28, 28))
-                image = np.expand_dims(image / 255, 2)
-                x_train.append(image)
-                y_train.append(i.lower())
-    x_train = np.array(x_train)
-    return x_train, y_train
-
-
-def load_numbers():
+def load_numbers(**kwargs):
     """Load numbers dataset"""
     print('[+] Init dataset: mnist')
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
@@ -37,20 +14,41 @@ def load_numbers():
     return x_train, y_train
 
 
-def load_dataset(*dataset_list):
+def load_latin(**kwargs):
+    """Load latin dataset"""
+    print('[+] Init dataset: ')
+
+
+def load_cyrillic(cyrillics_max_rows=None, **kwargs):
+    """Load cyrillic dataset, count - 345500"""
+    print(f'[+] Init dataset: HMCC balanced')
+    symbols = 'АаБбВвГгДдЕеЁёЖжЗзИийКкЛлМмНнОоОоПпРрСсТтУуYyФфХхЦцЧчШшЩщъыьЭэЮюЯя'
+    images = pd.read_csv('src/dataset/HMCC balanced.csv', delimiter=',', nrows=cyrillics_max_rows)
+    y_train, x_train = [], []
+    for image in tqdm(images.iloc):
+        image = np.array(image, dtype=np.uint8)
+        y = symbols[int(image[0])]
+        x = image[1:].reshape(28, 28, 1)
+        y_train.append(y)
+        x_train.append(x)
+    return np.array(x_train) / 255, np.array(y_train)
+
+
+def load_dataset(*datasets, **params):
     """
     Load daatset
-    :param dataset_list: 'cyrillic', 'numbers'
+    :param datasets: 'cyrillic', 'numbers'
     :return: list of image and list of letter or numbers
     """
-    data_list = ['cyrillic', 'numbers']
+    data_list = ['numbers', 'cyrillic']
     x_train, y_train = [], []
-    for dataset_name in dataset_list:
+    for dataset_name in datasets:
         if not dataset_name in data_list:
-            raise ValueError(f'Dataset name must be one of the ({data_list}), not {dataset_name}')
-        lx_train, ly_train = eval(f'load_{dataset_name}')()
+            raise ValueError(f'Dataset name must be one of the {data_list}, not {dataset_name}')
+        lx_train, ly_train = eval(f'load_{dataset_name}')(**params)
         x_train.append(lx_train)
         y_train.append(ly_train)
     x_train = np.concatenate(x_train)
     y_train = np.concatenate(y_train)
+    print(f'[+] Dataset ready: x - {x_train.shape}, y - {y_train.shape}')
     return x_train, y_train

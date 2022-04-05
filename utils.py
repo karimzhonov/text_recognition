@@ -54,3 +54,10 @@ def recurent_findContours(img_for_findContours: np.array, param1: int, min_w: in
             'x': x0, 'y': y0,
         })
     return return_contours
+
+
+def sort_contours(contours, axis):
+    if axis == 0:
+        return sorted(list(contours), key=lambda value: cv2.boundingRect(value)[1])
+    elif axis == 1:
+        return sorted(list(contours), key=lambda value: cv2.boundingRect(value)[0])
