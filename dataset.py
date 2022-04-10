@@ -4,34 +4,37 @@ from tqdm import tqdm
 from keras.datasets import mnist
 
 
-def load_numbers(**kwargs):
+def load_numbers(numbers_count=None, **kwargs):
     """Load numbers dataset"""
     print('[+] Init dataset: mnist')
     (x_train, y_train), (x_test, y_test) = mnist.load_data()
     x_train = np.concatenate([x_train, x_test])
     y_train = np.concatenate([y_train, y_test])
-    x_train = np.expand_dims(x_train / 255, axis=3)
+    if numbers_count:
+        x_train = x_train[:numbers_count]
+        y_train = y_train[:numbers_count]
     return x_train, y_train
 
 
-def load_latin(**kwargs):
+def load_latin(latin_count = None, **kwargs):
     """Load latin dataset"""
     print('[+] Init dataset: ')
 
 
-def load_cyrillic(cyrillics_max_rows=None, **kwargs):
+def load_cyrillic(cyrillic_count=None, **kwargs):
     """Load cyrillic dataset, count - 345500"""
     print(f'[+] Init dataset: HMCC balanced')
     symbols = 'АаБбВвГгДдЕеЁёЖжЗзИийКкЛлМмНнОоОоПпРрСсТтУуYyФфХхЦцЧчШшЩщъыьЭэЮюЯя'
-    images = pd.read_csv('src/dataset/HMCC balanced.csv', delimiter=',', nrows=cyrillics_max_rows)
+    images = pd.read_csv('src/dataset/HMCC balanced.csv', delimiter=',', nrows=cyrillic_count)
     y_train, x_train = [], []
-    for image in tqdm(images.iloc):
+    for i in tqdm(range(images.shape[0])):
+        image = images.iloc[i]
         image = np.array(image, dtype=np.uint8)
         y = symbols[int(image[0])]
-        x = image[1:].reshape(28, 28, 1)
+        x = image[1:].reshape(28, 28)
         y_train.append(y)
         x_train.append(x)
-    return np.array(x_train) / 255, np.array(y_train)
+    return np.array(x_train), np.array(y_train)
 
 
 def load_dataset(*datasets, **params):

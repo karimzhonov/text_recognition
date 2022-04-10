@@ -61,3 +61,20 @@ def sort_contours(contours, axis):
         return sorted(list(contours), key=lambda value: cv2.boundingRect(value)[1])
     elif axis == 1:
         return sorted(list(contours), key=lambda value: cv2.boundingRect(value)[0])
+
+
+def find_rotate_angle(image_threash):
+    contours, _ = cv2.findContours(image_threash, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    max_contour = contours[0]
+    max_contour_area = cv2.contourArea(max_contour)
+    for contour in contours:
+        contour_area = cv2.contourArea(contour)
+        if contour_area > max_contour_area:
+            max_contour_area = contour_area
+            max_contour = contour
+    _, _, angle = cv2.minAreaRect(max_contour)
+    return angle
+
+
+def sigmoid(x):
+    return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
